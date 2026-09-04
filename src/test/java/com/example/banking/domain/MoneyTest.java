@@ -46,6 +46,16 @@ class MoneyTest {
     }
 
     @Test
+    void addsAndSubtractsMoneyWithoutMutatingOriginalValues() {
+        Money original = Money.ofMinor(1_000, CurrencyCode.EUR);
+        Money other = Money.ofMinor(250, CurrencyCode.EUR);
+
+        assertThat(original.add(other)).isEqualTo(Money.ofMinor(1_250, CurrencyCode.EUR));
+        assertThat(original.subtract(other)).isEqualTo(Money.ofMinor(750, CurrencyCode.EUR));
+        assertThat(original).isEqualTo(Money.ofMinor(1_000, CurrencyCode.EUR));
+    }
+
+    @Test
     void rejectsNullValues() {
         assertThatNullPointerException()
                 .isThrownBy(() -> Money.ofMajor(null, CurrencyCode.EUR));

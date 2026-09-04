@@ -37,12 +37,44 @@ public final class Money {
         return ofMinor(0, currency);
     }
 
+    public Money add(Money other) {
+        requireSameCurrency(other);
+        return ofMinor(Math.addExact(minorUnits, other.minorUnits), currency);
+    }
+
+    public Money subtract(Money other) {
+        requireSameCurrency(other);
+        return ofMinor(Math.subtractExact(minorUnits, other.minorUnits), currency);
+    }
+
+    public boolean isGreaterThan(Money other) {
+        requireSameCurrency(other);
+        return minorUnits > other.minorUnits;
+    }
+
+    public boolean isPositive() {
+        return minorUnits > 0;
+    }
+
+    public boolean isNegative() {
+        return minorUnits < 0;
+    }
+
     public long minorUnits() {
         return minorUnits;
     }
 
     public CurrencyCode currency() {
         return currency;
+    }
+
+    private void requireSameCurrency(Money other) {
+        Objects.requireNonNull(other, "Money cannot be null");
+        if (currency != other.currency) {
+            throw new IllegalArgumentException(
+                    "Currencies must match: " + currency + " and " + other.currency
+            );
+        }
     }
 
     @Override
