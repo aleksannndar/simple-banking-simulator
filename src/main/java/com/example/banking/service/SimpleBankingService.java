@@ -29,7 +29,7 @@ public final class SimpleBankingService implements BankingService {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         Objects.requireNonNull(amount, "Amount cannot be null");
 
-        Account updatedAccount = accountRepository.get(accountId).deposit(amount);
+        Account updatedAccount = accountRepository.getForUpdate(accountId).deposit(amount);
         accountRepository.save(updatedAccount);
         return updatedAccount.balance();
     }
@@ -39,7 +39,7 @@ public final class SimpleBankingService implements BankingService {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         Objects.requireNonNull(amount, "Amount cannot be null");
 
-        Account updatedAccount = accountRepository.get(accountId).withdraw(amount);
+        Account updatedAccount = accountRepository.getForUpdate(accountId).withdraw(amount);
         accountRepository.save(updatedAccount);
         return updatedAccount.balance();
     }
@@ -52,8 +52,8 @@ public final class SimpleBankingService implements BankingService {
         AccountId destination = request.destinationAccountId();
         Money amount = request.amount();
 
-        Account sourceAccount = accountRepository.get(source);
-        Account destinationAccount = accountRepository.get(destination);
+        Account sourceAccount = accountRepository.getForUpdate(source);
+        Account destinationAccount = accountRepository.getForUpdate(destination);
         Account updatedSourceAccount = sourceAccount.withdraw(amount);
         Account updatedDestinationAccount = destinationAccount.deposit(amount);
 

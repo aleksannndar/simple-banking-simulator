@@ -41,6 +41,15 @@ class InMemoryAccountRepositoryTest {
     }
 
     @Test
+    void getsAccountForUpdateById() {
+        Account account = accountWithBalance(1_000);
+        repository.save(account);
+
+        assertThat(repository.getForUpdate(ACCOUNT_ID).balance())
+                .isEqualTo(Money.ofMinor(1_000, CurrencyCode.EUR));
+    }
+
+    @Test
     void returnsEmptyWhenAccountDoesNotExist() {
         assertThat(repository.findById(ACCOUNT_ID)).isEmpty();
     }
@@ -48,6 +57,8 @@ class InMemoryAccountRepositoryTest {
     @Test
     void throwsWhenGettingAccountThatDoesNotExist() {
         assertThatThrownBy(() -> repository.get(ACCOUNT_ID))
+                .isInstanceOf(AccountNotFoundException.class);
+        assertThatThrownBy(() -> repository.getForUpdate(ACCOUNT_ID))
                 .isInstanceOf(AccountNotFoundException.class);
     }
 
@@ -87,6 +98,8 @@ class InMemoryAccountRepositoryTest {
                 .isThrownBy(() -> repository.findById(null));
         assertThatNullPointerException()
                 .isThrownBy(() -> repository.get(null));
+        assertThatNullPointerException()
+                .isThrownBy(() -> repository.getForUpdate(null));
     }
 
     private static Account accountWithBalance(long minorUnits) {

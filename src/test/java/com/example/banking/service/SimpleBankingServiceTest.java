@@ -3,6 +3,7 @@ package com.example.banking.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.example.banking.domain.Account;
 import com.example.banking.domain.AccountId;
 import com.example.banking.domain.CurrencyCode;
 import com.example.banking.domain.InsufficientFundsException;
@@ -11,6 +12,9 @@ import com.example.banking.domain.Money;
 import com.example.banking.repository.AccountNotFoundException;
 import com.example.banking.repository.AccountRepository;
 import com.example.banking.repository.memory.InMemoryAccountRepository;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -260,6 +264,22 @@ class SimpleBankingServiceTest {
     }
 
     @Test
+    void usesLockingReadsOnlyForAccountsThatWillBeChanged() {
+        RecordingAccountRepository recordingRepository = new RecordingAccountRepository();
+        SimpleBankingService recordingService = new SimpleBankingService(recordingRepository);
+        AccountId source = recordingService.createAccount(euros(1_000));
+        AccountId destination = recordingService.createAccount(euros(500));
+
+        recordingService.deposit(source, euros(100));
+        recordingService.withdraw(source, euros(50));
+        recordingService.transfer(new TransferRequest(source, destination, euros(250)));
+        recordingService.getBalance(source);
+
+        assertThat(recordingRepository.lockedAccountIds())
+                .containsExactly(source, source, source, destination);
+    }
+
+    @Test
     void rejectsBalanceLookupForMissingAccount() {
         assertThatThrownBy(() -> service.getBalance(missingAccountId()))
                 .isInstanceOf(AccountNotFoundException.class);
@@ -273,5 +293,30 @@ class SimpleBankingServiceTest {
         return new AccountId(
                 UUID.fromString("00000000-0000-0000-0000-000000000001")
         );
+    }
+
+    private static final class RecordingAccountRepository implements AccountRepository {
+        private final InMemoryAccountRepository delegate = new InMemoryAccountRepository();
+        private final List<AccountId> lockedAccountIds = new ArrayList<>();
+
+        @Override
+        public void save(Account account) {
+            delegate.save(account);
+        }
+
+        @Override
+        public Optional<Account> findById(AccountId accountId) {
+            return delegate.findById(accountId);
+        }
+
+        @Override
+        public Account getForUpdate(AccountId accountId) {
+            lockedAccountIds.add(accountId);
+            return delegate.getForUpdate(accountId);
+        }
+
+        List<AccountId> lockedAccountIds() {
+            return List.copyOf(lockedAccountIds);
+        }
     }
 }

@@ -10,6 +10,8 @@ public interface AccountRepository {
 
     Optional<Account> findById(AccountId accountId);
 
+    Account getForUpdate(AccountId accountId);
+
     default Account get(AccountId accountId) {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         return findById(accountId)

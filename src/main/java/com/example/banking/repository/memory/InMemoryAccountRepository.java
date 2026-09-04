@@ -22,4 +22,9 @@ public final class InMemoryAccountRepository implements AccountRepository {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         return Optional.ofNullable(accounts.get(accountId));
     }
+
+    @Override
+    public Account getForUpdate(AccountId accountId) {
+        return get(accountId);
+    }
 }
