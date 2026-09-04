@@ -17,6 +17,8 @@ public final class SimpleBankingService implements BankingService {
 
     @Override
     public AccountId createAccount(Money initialDeposit) {
+        Objects.requireNonNull(initialDeposit, "Initial deposit cannot be null");
+
         Account newAccount = Account.create(AccountId.generate(), initialDeposit);
         accountRepository.save(newAccount);
         return newAccount.id();
@@ -24,6 +26,9 @@ public final class SimpleBankingService implements BankingService {
 
     @Override
     public Money deposit(AccountId accountId, Money amount) {
+        Objects.requireNonNull(accountId, "Account ID cannot be null");
+        Objects.requireNonNull(amount, "Amount cannot be null");
+
         Account account = accountRepository.get(accountId);
         account.deposit(amount);
         accountRepository.save(account);
@@ -32,6 +37,9 @@ public final class SimpleBankingService implements BankingService {
 
     @Override
     public Money withdraw(AccountId accountId, Money amount) {
+        Objects.requireNonNull(accountId, "Account ID cannot be null");
+        Objects.requireNonNull(amount, "Amount cannot be null");
+
         Account account = accountRepository.get(accountId);
         account.withdraw(amount);
         accountRepository.save(account);
@@ -40,11 +48,28 @@ public final class SimpleBankingService implements BankingService {
 
     @Override
     public TransferResult transfer(TransferRequest request) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        Objects.requireNonNull(request, "Transfer request cannot be null");
+
+        AccountId source = request.sourceAccountId();
+        AccountId destination = request.destinationAccountId();
+        Money amount = request.amount();
+
+        Account sourceAccount = accountRepository.get(source);
+        Account destinationAccount = accountRepository.get(destination);
+
+        sourceAccount.withdraw(amount);
+        destinationAccount.deposit(amount);
+
+        accountRepository.save(sourceAccount);
+        accountRepository.save(destinationAccount);
+
+        return new TransferResult(source, destination, amount, sourceAccount.balance(), destinationAccount.balance());
     }
 
     @Override
     public Money getBalance(AccountId accountId) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        Objects.requireNonNull(accountId, "Account ID cannot be null");
+
+        return accountRepository.get(accountId).balance();
     }
 }

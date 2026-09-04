@@ -50,6 +50,38 @@ class SimpleBankingServiceTest {
     }
 
     @Test
+    void rejectsNullDepositArguments() {
+        AccountId accountId = service.createAccount(euros(1000));
+
+        assertThatThrownBy(() -> service.deposit(null, euros(100)))
+                .isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> service.deposit(accountId, null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void rejectsNullWithdrawalArguments() {
+        AccountId accountId = service.createAccount(euros(1000));
+
+        assertThatThrownBy(() -> service.withdraw(null, euros(100)))
+                .isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> service.withdraw(accountId, null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void rejectsNullTransferRequest() {
+        assertThatThrownBy(() -> service.transfer(null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void rejectsNullAccountIdWhenGettingBalance() {
+        assertThatThrownBy(() -> service.getBalance(null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
     void depositsAndReturnsResultingBalance() {
         AccountId accountId = service.createAccount(euros(1000));
 
