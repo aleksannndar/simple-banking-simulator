@@ -29,10 +29,9 @@ public final class SimpleBankingService implements BankingService {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         Objects.requireNonNull(amount, "Amount cannot be null");
 
-        Account account = accountRepository.get(accountId);
-        account.deposit(amount);
-        accountRepository.save(account);
-        return account.balance();
+        Account updatedAccount = accountRepository.get(accountId).deposit(amount);
+        accountRepository.save(updatedAccount);
+        return updatedAccount.balance();
     }
 
     @Override
@@ -40,10 +39,9 @@ public final class SimpleBankingService implements BankingService {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         Objects.requireNonNull(amount, "Amount cannot be null");
 
-        Account account = accountRepository.get(accountId);
-        account.withdraw(amount);
-        accountRepository.save(account);
-        return account.balance();
+        Account updatedAccount = accountRepository.get(accountId).withdraw(amount);
+        accountRepository.save(updatedAccount);
+        return updatedAccount.balance();
     }
 
     @Override
@@ -56,14 +54,19 @@ public final class SimpleBankingService implements BankingService {
 
         Account sourceAccount = accountRepository.get(source);
         Account destinationAccount = accountRepository.get(destination);
+        Account updatedSourceAccount = sourceAccount.withdraw(amount);
+        Account updatedDestinationAccount = destinationAccount.deposit(amount);
 
-        sourceAccount.withdraw(amount);
-        destinationAccount.deposit(amount);
+        accountRepository.save(updatedSourceAccount);
+        accountRepository.save(updatedDestinationAccount);
 
-        accountRepository.save(sourceAccount);
-        accountRepository.save(destinationAccount);
-
-        return new TransferResult(source, destination, amount, sourceAccount.balance(), destinationAccount.balance());
+        return new TransferResult(
+                source,
+                destination,
+                amount,
+                updatedSourceAccount.balance(),
+                updatedDestinationAccount.balance()
+        );
     }
 
     @Override

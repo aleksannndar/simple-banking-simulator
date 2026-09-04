@@ -2,9 +2,12 @@ package com.example.banking.domain;
 
 import java.util.Objects;
 
+/**
+ * An immutable snapshot of an account. Operations that change the balance return a new snapshot.
+ */
 public final class Account {
     private final AccountId id;
-    private Money balance;
+    private final Money balance;
 
     private Account(AccountId id, Money balance) {
         this.id = id;
@@ -22,18 +25,18 @@ public final class Account {
         return new Account(id, initialDeposit);
     }
 
-    public void deposit(Money amount) {
+    public Account deposit(Money amount) {
         validateTransactionAmount(amount);
-        balance = balance.add(amount);
+        return new Account(id, balance.add(amount));
     }
 
-    public void withdraw(Money amount) {
+    public Account withdraw(Money amount) {
         validateTransactionAmount(amount);
         if (amount.isGreaterThan(balance)) {
             throw new InsufficientFundsException(balance, amount);
         }
 
-        balance = balance.subtract(amount);
+        return new Account(id, balance.subtract(amount));
     }
 
     public AccountId id() {

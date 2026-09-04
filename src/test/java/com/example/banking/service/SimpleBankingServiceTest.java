@@ -168,6 +168,16 @@ class SimpleBankingServiceTest {
     }
 
     @Test
+    void rejectsTransferToSameAccount() {
+        AccountId accountId = service.createAccount(euros(1000));
+
+        assertThatThrownBy(() -> new TransferRequest(accountId, accountId, euros(250)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Source and destination accounts must be different");
+        assertThat(repository.get(accountId).balance()).isEqualTo(euros(1000));
+    }
+
+    @Test
     void rejectsTransferFromMissingSourceWithoutChangingDestination() {
         AccountId destinationAccountId = service.createAccount(euros(500));
         TransferRequest request = new TransferRequest(
@@ -209,6 +219,22 @@ class SimpleBankingServiceTest {
                 .isInstanceOf(InsufficientFundsException.class);
         assertThat(repository.get(sourceAccountId).balance()).isEqualTo(euros(100));
         assertThat(repository.get(destinationAccountId).balance()).isEqualTo(euros(500));
+    }
+
+    @Test
+    void rejectsTransferWhenDestinationBalanceOverflowsWithoutChangingBalances() {
+        AccountId sourceAccountId = service.createAccount(euros(100));
+        AccountId destinationAccountId = service.createAccount(euros(Long.MAX_VALUE));
+        TransferRequest request = new TransferRequest(
+                sourceAccountId,
+                destinationAccountId,
+                euros(1)
+        );
+
+        assertThatThrownBy(() -> service.transfer(request))
+                .isInstanceOf(ArithmeticException.class);
+        assertThat(repository.get(sourceAccountId).balance()).isEqualTo(euros(100));
+        assertThat(repository.get(destinationAccountId).balance()).isEqualTo(euros(Long.MAX_VALUE));
     }
 
     @Test

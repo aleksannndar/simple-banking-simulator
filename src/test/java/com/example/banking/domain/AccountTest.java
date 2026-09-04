@@ -39,9 +39,12 @@ class AccountTest {
     void depositsMoney() {
         Account account = Account.create(ACCOUNT_ID, euros(10_00));
 
-        account.deposit(euros(2_50));
+        Account updatedAccount = account.deposit(euros(2_50));
 
-        assertThat(account.balance()).isEqualTo(euros(12_50));
+        assertThat(updatedAccount).isNotSameAs(account);
+        assertThat(updatedAccount.id()).isEqualTo(account.id());
+        assertThat(updatedAccount.balance()).isEqualTo(euros(12_50));
+        assertThat(account.balance()).isEqualTo(euros(10_00));
     }
 
     @Test
@@ -59,18 +62,21 @@ class AccountTest {
     void withdrawsMoney() {
         Account account = Account.create(ACCOUNT_ID, euros(10_00));
 
-        account.withdraw(euros(3_25));
+        Account updatedAccount = account.withdraw(euros(3_25));
 
-        assertThat(account.balance()).isEqualTo(euros(6_75));
+        assertThat(updatedAccount).isNotSameAs(account);
+        assertThat(updatedAccount.balance()).isEqualTo(euros(6_75));
+        assertThat(account.balance()).isEqualTo(euros(10_00));
     }
 
     @Test
     void permitsWithdrawingEntireBalance() {
         Account account = Account.create(ACCOUNT_ID, euros(10_00));
 
-        account.withdraw(euros(10_00));
+        Account updatedAccount = account.withdraw(euros(10_00));
 
-        assertThat(account.balance()).isEqualTo(euros(0));
+        assertThat(updatedAccount.balance()).isEqualTo(euros(0));
+        assertThat(account.balance()).isEqualTo(euros(10_00));
     }
 
     @Test

@@ -25,7 +25,10 @@ class InMemoryAccountRepositoryTest {
 
         repository.save(account);
 
-        assertThat(repository.findById(ACCOUNT_ID)).containsSame(account);
+        assertThat(repository.findById(ACCOUNT_ID)).hasValueSatisfying(savedAccount -> {
+            assertThat(savedAccount.id()).isEqualTo(ACCOUNT_ID);
+            assertThat(savedAccount.balance()).isEqualTo(Money.ofMinor(1_000, CurrencyCode.EUR));
+        });
     }
 
     @Test
@@ -33,7 +36,8 @@ class InMemoryAccountRepositoryTest {
         Account account = accountWithBalance(1_000);
         repository.save(account);
 
-        assertThat(repository.get(ACCOUNT_ID)).isSameAs(account);
+        assertThat(repository.get(ACCOUNT_ID).balance())
+                .isEqualTo(Money.ofMinor(1_000, CurrencyCode.EUR));
     }
 
     @Test
@@ -55,7 +59,24 @@ class InMemoryAccountRepositoryTest {
         repository.save(original);
         repository.save(replacement);
 
-        assertThat(repository.findById(ACCOUNT_ID)).containsSame(replacement);
+        assertThat(repository.get(ACCOUNT_ID).balance())
+                .isEqualTo(Money.ofMinor(2_000, CurrencyCode.EUR));
+    }
+
+    @Test
+    void makesAccountChangesVisibleOnlyAfterSavingUpdatedSnapshot() {
+        Account savedAccount = accountWithBalance(1_000);
+        repository.save(savedAccount);
+
+        Account updatedAccount = repository.get(ACCOUNT_ID).deposit(Money.ofMinor(500, CurrencyCode.EUR));
+
+        assertThat(repository.get(ACCOUNT_ID).balance())
+                .isEqualTo(Money.ofMinor(1_000, CurrencyCode.EUR));
+
+        repository.save(updatedAccount);
+
+        assertThat(repository.get(ACCOUNT_ID).balance())
+                .isEqualTo(Money.ofMinor(1_500, CurrencyCode.EUR));
     }
 
     @Test
