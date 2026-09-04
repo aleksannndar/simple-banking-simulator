@@ -13,5 +13,9 @@ public record TransferRequest(
         Objects.requireNonNull(sourceAccountId, "Source account ID cannot be null");
         Objects.requireNonNull(destinationAccountId, "Destination account ID cannot be null");
         Objects.requireNonNull(amount, "Transfer amount cannot be null");
+
+        if (sourceAccountId.equals(destinationAccountId)) {
+            throw new IllegalArgumentException("Source and destination accounts must be different");
+        }
     }
 }
