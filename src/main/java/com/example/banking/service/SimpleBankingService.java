@@ -24,12 +24,18 @@ public final class SimpleBankingService implements BankingService {
 
     @Override
     public Money deposit(AccountId accountId, Money amount) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        Account account = accountRepository.get(accountId);
+        account.deposit(amount);
+        accountRepository.save(account);
+        return account.balance();
     }
 
     @Override
     public Money withdraw(AccountId accountId, Money amount) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        Account account = accountRepository.get(accountId);
+        account.withdraw(amount);
+        accountRepository.save(account);
+        return account.balance();
     }
 
     @Override
