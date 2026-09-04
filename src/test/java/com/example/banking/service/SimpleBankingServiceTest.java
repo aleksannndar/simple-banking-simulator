@@ -144,6 +144,102 @@ class SimpleBankingServiceTest {
         assertThat(repository.get(accountId).balance()).isEqualTo(euros(1000));
     }
 
+    @Test
+    void transfersMoneyAndReturnsResultingBalances() {
+        AccountId sourceAccountId = service.createAccount(euros(1000));
+        AccountId destinationAccountId = service.createAccount(euros(500));
+        TransferRequest request = new TransferRequest(
+                sourceAccountId,
+                destinationAccountId,
+                euros(250)
+        );
+
+        TransferResult result = service.transfer(request);
+
+        assertThat(result).isEqualTo(new TransferResult(
+                sourceAccountId,
+                destinationAccountId,
+                euros(250),
+                euros(750),
+                euros(750)
+        ));
+        assertThat(repository.get(sourceAccountId).balance()).isEqualTo(euros(750));
+        assertThat(repository.get(destinationAccountId).balance()).isEqualTo(euros(750));
+    }
+
+    @Test
+    void rejectsTransferFromMissingSourceWithoutChangingDestination() {
+        AccountId destinationAccountId = service.createAccount(euros(500));
+        TransferRequest request = new TransferRequest(
+                missingAccountId(),
+                destinationAccountId,
+                euros(100)
+        );
+
+        assertThatThrownBy(() -> service.transfer(request))
+                .isInstanceOf(AccountNotFoundException.class);
+        assertThat(repository.get(destinationAccountId).balance()).isEqualTo(euros(500));
+    }
+
+    @Test
+    void rejectsTransferToMissingDestinationWithoutChangingSource() {
+        AccountId sourceAccountId = service.createAccount(euros(1000));
+        TransferRequest request = new TransferRequest(
+                sourceAccountId,
+                missingAccountId(),
+                euros(100)
+        );
+
+        assertThatThrownBy(() -> service.transfer(request))
+                .isInstanceOf(AccountNotFoundException.class);
+        assertThat(repository.get(sourceAccountId).balance()).isEqualTo(euros(1000));
+    }
+
+    @Test
+    void rejectsTransferWithInsufficientFundsWithoutChangingBalances() {
+        AccountId sourceAccountId = service.createAccount(euros(100));
+        AccountId destinationAccountId = service.createAccount(euros(500));
+        TransferRequest request = new TransferRequest(
+                sourceAccountId,
+                destinationAccountId,
+                euros(101)
+        );
+
+        assertThatThrownBy(() -> service.transfer(request))
+                .isInstanceOf(InsufficientFundsException.class);
+        assertThat(repository.get(sourceAccountId).balance()).isEqualTo(euros(100));
+        assertThat(repository.get(destinationAccountId).balance()).isEqualTo(euros(500));
+    }
+
+    @Test
+    void rejectsNonPositiveTransferWithoutChangingBalances() {
+        AccountId sourceAccountId = service.createAccount(euros(100));
+        AccountId destinationAccountId = service.createAccount(euros(500));
+        TransferRequest request = new TransferRequest(
+                sourceAccountId,
+                destinationAccountId,
+                euros(0)
+        );
+
+        assertThatThrownBy(() -> service.transfer(request))
+                .isInstanceOf(InvalidAmountException.class);
+        assertThat(repository.get(sourceAccountId).balance()).isEqualTo(euros(100));
+        assertThat(repository.get(destinationAccountId).balance()).isEqualTo(euros(500));
+    }
+
+    @Test
+    void getsAccountBalance() {
+        AccountId accountId = service.createAccount(euros(1000));
+
+        assertThat(service.getBalance(accountId)).isEqualTo(euros(1000));
+    }
+
+    @Test
+    void rejectsBalanceLookupForMissingAccount() {
+        assertThatThrownBy(() -> service.getBalance(missingAccountId()))
+                .isInstanceOf(AccountNotFoundException.class);
+    }
+
     private static Money euros(long minorUnits) {
         return Money.ofMinor(minorUnits, CurrencyCode.EUR);
     }
