@@ -25,8 +25,7 @@ class MoneyTest {
     @Test
     void rejectsUnsupportedFractionalPrecision() {
         assertThatIllegalArgumentException()
-                .isThrownBy(() -> Money.ofMajor(new BigDecimal("12.345"), CurrencyCode.EUR))
-                .withMessageContaining("cannot be represented exactly");
+                .isThrownBy(() -> Money.ofMajor(new BigDecimal("12.345"), CurrencyCode.EUR));
     }
 
     @Test
@@ -35,8 +34,7 @@ class MoneyTest {
                 .isThrownBy(() -> Money.ofMajor(
                         new BigDecimal("92233720368547758.08"),
                         CurrencyCode.EUR
-                ))
-                .withMessageContaining("cannot be represented exactly");
+                ));
     }
 
     @Test

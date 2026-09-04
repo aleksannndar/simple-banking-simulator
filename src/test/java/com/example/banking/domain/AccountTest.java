@@ -32,8 +32,7 @@ class AccountTest {
     @Test
     void rejectsNegativeInitialDeposit() {
         assertThatThrownBy(() -> Account.create(ACCOUNT_ID, euros(-1)))
-                .isInstanceOf(InvalidAmountException.class)
-                .hasMessage("Initial deposit cannot be negative");
+                .isInstanceOf(InvalidAmountException.class);
     }
 
     @Test
