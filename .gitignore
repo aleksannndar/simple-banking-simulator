@@ -1,0 +1,34 @@
+# Maven and local tools
+/target/
+/.m2/
+/.tools/
+
+# IntelliJ IDEA
+/.idea/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse
+/.apt_generated/
+/.classpath
+/.factorypath
+/.project
+/.settings/
+/.springBeans
+/.sts4-cache/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+/build/
+
+# Visual Studio Code
+/.vscode/
+
+# Operating-system files
+.DS_Store
+Thumbs.db
