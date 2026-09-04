@@ -4,24 +4,37 @@ import com.example.banking.domain.Account;
 import com.example.banking.domain.AccountId;
 import com.example.banking.domain.Money;
 import com.example.banking.repository.AccountRepository;
+import com.example.banking.transaction.TransactionManager;
 
 import java.util.Objects;
 
 public final class SimpleBankingService implements BankingService {
     private final AccountRepository accountRepository;
+    private final TransactionManager transactionManager;
 
-    public SimpleBankingService(AccountRepository accountRepository) {
-        Objects.requireNonNull(accountRepository, "Account Repository cannot be null");
-        this.accountRepository = accountRepository;
+    public SimpleBankingService(
+            AccountRepository accountRepository,
+            TransactionManager transactionManager
+    ) {
+        this.accountRepository = Objects.requireNonNull(
+                accountRepository,
+                "Account repository cannot be null"
+        );
+        this.transactionManager = Objects.requireNonNull(
+                transactionManager,
+                "Transaction manager cannot be null"
+        );
     }
 
     @Override
     public AccountId createAccount(Money initialDeposit) {
         Objects.requireNonNull(initialDeposit, "Initial deposit cannot be null");
 
-        Account newAccount = Account.create(AccountId.generate(), initialDeposit);
-        accountRepository.save(newAccount);
-        return newAccount.id();
+        return transactionManager.execute(() -> {
+            Account newAccount = Account.create(AccountId.generate(), initialDeposit);
+            accountRepository.save(newAccount);
+            return newAccount.id();
+        });
     }
 
     @Override
@@ -29,9 +42,11 @@ public final class SimpleBankingService implements BankingService {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         Objects.requireNonNull(amount, "Amount cannot be null");
 
-        Account updatedAccount = accountRepository.getForUpdate(accountId).deposit(amount);
-        accountRepository.save(updatedAccount);
-        return updatedAccount.balance();
+        return transactionManager.execute(() -> {
+            Account updatedAccount = accountRepository.getForUpdate(accountId).deposit(amount);
+            accountRepository.save(updatedAccount);
+            return updatedAccount.balance();
+        });
     }
 
     @Override
@@ -39,9 +54,11 @@ public final class SimpleBankingService implements BankingService {
         Objects.requireNonNull(accountId, "Account ID cannot be null");
         Objects.requireNonNull(amount, "Amount cannot be null");
 
-        Account updatedAccount = accountRepository.getForUpdate(accountId).withdraw(amount);
-        accountRepository.save(updatedAccount);
-        return updatedAccount.balance();
+        return transactionManager.execute(() -> {
+            Account updatedAccount = accountRepository.getForUpdate(accountId).withdraw(amount);
+            accountRepository.save(updatedAccount);
+            return updatedAccount.balance();
+        });
     }
 
     @Override
@@ -52,21 +69,23 @@ public final class SimpleBankingService implements BankingService {
         AccountId destination = request.destinationAccountId();
         Money amount = request.amount();
 
-        Account sourceAccount = accountRepository.getForUpdate(source);
-        Account destinationAccount = accountRepository.getForUpdate(destination);
-        Account updatedSourceAccount = sourceAccount.withdraw(amount);
-        Account updatedDestinationAccount = destinationAccount.deposit(amount);
+        return transactionManager.execute(() -> {
+            Account sourceAccount = accountRepository.getForUpdate(source);
+            Account destinationAccount = accountRepository.getForUpdate(destination);
+            Account updatedSourceAccount = sourceAccount.withdraw(amount);
+            Account updatedDestinationAccount = destinationAccount.deposit(amount);
 
-        accountRepository.save(updatedSourceAccount);
-        accountRepository.save(updatedDestinationAccount);
+            accountRepository.save(updatedSourceAccount);
+            accountRepository.save(updatedDestinationAccount);
 
-        return new TransferResult(
-                source,
-                destination,
-                amount,
-                updatedSourceAccount.balance(),
-                updatedDestinationAccount.balance()
-        );
+            return new TransferResult(
+                    source,
+                    destination,
+                    amount,
+                    updatedSourceAccount.balance(),
+                    updatedDestinationAccount.balance()
+            );
+        });
     }
 
     @Override

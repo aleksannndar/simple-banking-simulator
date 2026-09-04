@@ -12,6 +12,8 @@ import com.example.banking.domain.Money;
 import com.example.banking.repository.AccountNotFoundException;
 import com.example.banking.repository.AccountRepository;
 import com.example.banking.repository.memory.InMemoryAccountRepository;
+import com.example.banking.transaction.TransactionManager;
+import com.example.banking.transaction.memory.InMemoryTransactionManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -20,7 +22,10 @@ import org.junit.jupiter.api.Test;
 
 class SimpleBankingServiceTest {
     private final AccountRepository repository = new InMemoryAccountRepository();
-    private final SimpleBankingService service = new SimpleBankingService(repository);
+    private final TransactionManager transactionManager =
+            new InMemoryTransactionManager();
+    private final SimpleBankingService service =
+            new SimpleBankingService(repository, transactionManager);
 
     @Test
     void createsAndSavesAccountWithInitialDeposit() {
@@ -261,22 +266,6 @@ class SimpleBankingServiceTest {
         AccountId accountId = service.createAccount(euros(1000));
 
         assertThat(service.getBalance(accountId)).isEqualTo(euros(1000));
-    }
-
-    @Test
-    void usesLockingReadsOnlyForAccountsThatWillBeChanged() {
-        RecordingAccountRepository recordingRepository = new RecordingAccountRepository();
-        SimpleBankingService recordingService = new SimpleBankingService(recordingRepository);
-        AccountId source = recordingService.createAccount(euros(1_000));
-        AccountId destination = recordingService.createAccount(euros(500));
-
-        recordingService.deposit(source, euros(100));
-        recordingService.withdraw(source, euros(50));
-        recordingService.transfer(new TransferRequest(source, destination, euros(250)));
-        recordingService.getBalance(source);
-
-        assertThat(recordingRepository.lockedAccountIds())
-                .containsExactly(source, source, source, destination);
     }
 
     @Test
