@@ -36,6 +36,14 @@ class AccountTest {
     }
 
     @Test
+    void rejectsMissingCreationValues() {
+        assertThatThrownBy(() -> Account.create(null, euros(10_00)))
+                .isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> Account.create(ACCOUNT_ID, null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
     void depositsMoney() {
         Account account = Account.create(ACCOUNT_ID, euros(10_00));
 
@@ -97,14 +105,6 @@ class AccountTest {
         assertThatThrownBy(() -> account.withdraw(euros(10_01)))
                 .isInstanceOf(InsufficientFundsException.class);
         assertThat(account.balance()).isEqualTo(euros(10_00));
-    }
-
-    @Test
-    void rejectsMissingCreationValues() {
-        assertThatThrownBy(() -> Account.create(null, euros(10_00)))
-                .isInstanceOf(NullPointerException.class);
-        assertThatThrownBy(() -> Account.create(ACCOUNT_ID, null))
-                .isInstanceOf(NullPointerException.class);
     }
 
     private static Money euros(long minorUnits) {

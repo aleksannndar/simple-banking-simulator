@@ -32,37 +32,6 @@ class InMemoryAccountRepositoryTest {
     }
 
     @Test
-    void getsAccountById() {
-        Account account = accountWithBalance(1_000);
-        repository.save(account);
-
-        assertThat(repository.get(ACCOUNT_ID).balance())
-                .isEqualTo(Money.ofMinor(1_000, CurrencyCode.EUR));
-    }
-
-    @Test
-    void getsAccountForUpdateById() {
-        Account account = accountWithBalance(1_000);
-        repository.save(account);
-
-        assertThat(repository.getForUpdate(ACCOUNT_ID).balance())
-                .isEqualTo(Money.ofMinor(1_000, CurrencyCode.EUR));
-    }
-
-    @Test
-    void returnsEmptyWhenAccountDoesNotExist() {
-        assertThat(repository.findById(ACCOUNT_ID)).isEmpty();
-    }
-
-    @Test
-    void throwsWhenGettingAccountThatDoesNotExist() {
-        assertThatThrownBy(() -> repository.get(ACCOUNT_ID))
-                .isInstanceOf(AccountNotFoundException.class);
-        assertThatThrownBy(() -> repository.getForUpdate(ACCOUNT_ID))
-                .isInstanceOf(AccountNotFoundException.class);
-    }
-
-    @Test
     void replacesPreviouslySavedAccountWithSameId() {
         Account original = accountWithBalance(1000);
         Account replacement = accountWithBalance(2000);
@@ -91,13 +60,60 @@ class InMemoryAccountRepositoryTest {
     }
 
     @Test
-    void rejectsNullValues() {
+    void rejectsNullAccountWhenSaving() {
         assertThatNullPointerException()
                 .isThrownBy(() -> repository.save(null));
+    }
+
+    @Test
+    void returnsEmptyWhenAccountDoesNotExist() {
+        assertThat(repository.findById(ACCOUNT_ID)).isEmpty();
+    }
+
+    @Test
+    void rejectsNullAccountIdWhenFinding() {
         assertThatNullPointerException()
                 .isThrownBy(() -> repository.findById(null));
+    }
+
+    @Test
+    void getsAccountById() {
+        Account account = accountWithBalance(1_000);
+        repository.save(account);
+
+        assertThat(repository.get(ACCOUNT_ID).balance())
+                .isEqualTo(Money.ofMinor(1_000, CurrencyCode.EUR));
+    }
+
+    @Test
+    void throwsWhenGettingAccountThatDoesNotExist() {
+        assertThatThrownBy(() -> repository.get(ACCOUNT_ID))
+                .isInstanceOf(AccountNotFoundException.class);
+    }
+
+    @Test
+    void rejectsNullAccountIdWhenGetting() {
         assertThatNullPointerException()
                 .isThrownBy(() -> repository.get(null));
+    }
+
+    @Test
+    void getsAccountForUpdateById() {
+        Account account = accountWithBalance(1_000);
+        repository.save(account);
+
+        assertThat(repository.getForUpdate(ACCOUNT_ID).balance())
+                .isEqualTo(Money.ofMinor(1_000, CurrencyCode.EUR));
+    }
+
+    @Test
+    void throwsWhenGettingMissingAccountForUpdate() {
+        assertThatThrownBy(() -> repository.getForUpdate(ACCOUNT_ID))
+                .isInstanceOf(AccountNotFoundException.class);
+    }
+
+    @Test
+    void rejectsNullAccountIdWhenGettingForUpdate() {
         assertThatNullPointerException()
                 .isThrownBy(() -> repository.getForUpdate(null));
     }

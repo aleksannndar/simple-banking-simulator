@@ -38,6 +38,20 @@ class MoneyTest {
     }
 
     @Test
+    void rejectsNullMajorUnitValues() {
+        assertThatNullPointerException()
+                .isThrownBy(() -> Money.ofMajor(null, CurrencyCode.EUR));
+        assertThatNullPointerException()
+                .isThrownBy(() -> Money.ofMajor(BigDecimal.ONE, null));
+    }
+
+    @Test
+    void rejectsNullMinorUnitCurrency() {
+        assertThatNullPointerException()
+                .isThrownBy(() -> Money.ofMinor(100, null));
+    }
+
+    @Test
     void createsZeroForCurrency() {
         assertThat(Money.zero(CurrencyCode.EUR))
                 .isEqualTo(Money.ofMinor(0, CurrencyCode.EUR));
@@ -53,13 +67,4 @@ class MoneyTest {
         assertThat(original).isEqualTo(Money.ofMinor(1_000, CurrencyCode.EUR));
     }
 
-    @Test
-    void rejectsNullValues() {
-        assertThatNullPointerException()
-                .isThrownBy(() -> Money.ofMajor(null, CurrencyCode.EUR));
-        assertThatNullPointerException()
-                .isThrownBy(() -> Money.ofMajor(BigDecimal.ONE, null));
-        assertThatNullPointerException()
-                .isThrownBy(() -> Money.ofMinor(100, null));
-    }
 }
