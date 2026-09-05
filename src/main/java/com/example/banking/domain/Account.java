@@ -2,9 +2,6 @@ package com.example.banking.domain;
 
 import java.util.Objects;
 
-/**
- * An immutable snapshot of an account. Operations that change the balance return a new snapshot.
- */
 public final class Account {
     private final AccountId id;
     private final Money balance;

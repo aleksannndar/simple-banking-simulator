@@ -6,9 +6,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
-/**
- * Serializes writes within one application instance. It does not provide rollback.
- */
 public final class InMemoryTransactionManager implements TransactionManager {
     private final Lock writeLock = new ReentrantLock();
 
